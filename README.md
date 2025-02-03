@@ -1,3 +1,3 @@
-# Materials
+# Material Systems
 
-Describes how shaders should be used to render objects.
+Implements loading materials from JSON.
