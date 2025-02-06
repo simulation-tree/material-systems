@@ -62,34 +62,42 @@ namespace Materials.Systems
 
         private readonly void LoadMaterials(World world, Simulator simulator, TimeSpan delta)
         {
-            ComponentQuery<IsMaterialRequest> requestQuery = new(world);
-            foreach (var r in requestQuery)
+            ComponentType componentType = world.Schema.GetComponent<IsMaterialRequest>();
+            foreach (Chunk chunk in world.Chunks)
             {
-                ref IsMaterialRequest request = ref r.component1;
-                Entity material = new(world, r.entity);
-                if (request.status == IsMaterialRequest.Status.Submitted)
+                if (chunk.Definition.Contains(componentType))
                 {
-                    request.status = IsMaterialRequest.Status.Loading;
-                    Trace.WriteLine($"Started searching data for material `{material}` with address `{request.address}`");
-                }
-
-                if (request.status == IsMaterialRequest.Status.Loading)
-                {
-                    IsMaterialRequest dataRequest = request;
-                    if (TryLoadMaterial(material, dataRequest, simulator))
+                    USpan<uint> entities = chunk.Entities;
+                    USpan<IsMaterialRequest> components = chunk.GetComponents<IsMaterialRequest>(componentType);
+                    for (uint i = 0; i < entities.Length; i++)
                     {
-                        Trace.WriteLine($"Material `{material}` has been loaded");
-
-                        //todo: being done this way because reference to the request may have shifted
-                        world.SetComponent(r.entity, dataRequest.BecomeLoaded());
-                    }
-                    else
-                    {
-                        request.duration += delta;
-                        if (request.duration >= request.timeout)
+                        ref IsMaterialRequest request = ref components[i];
+                        Entity material = new(world, entities[i]);
+                        if (request.status == IsMaterialRequest.Status.Submitted)
                         {
-                            Trace.TraceError($"Material `{material}` could not be loaded");
-                            request.status = IsMaterialRequest.Status.NotFound;
+                            request.status = IsMaterialRequest.Status.Loading;
+                            Trace.WriteLine($"Started searching data for material `{material}` with address `{request.address}`");
+                        }
+
+                        if (request.status == IsMaterialRequest.Status.Loading)
+                        {
+                            IsMaterialRequest dataRequest = request;
+                            if (TryLoadMaterial(material, dataRequest, simulator))
+                            {
+                                Trace.WriteLine($"Material `{material}` has been loaded");
+
+                                //todo: being done this way because reference to the request may have shifted
+                                material.SetComponent(dataRequest.BecomeLoaded());
+                            }
+                            else
+                            {
+                                request.duration += delta;
+                                if (request.duration >= request.timeout)
+                                {
+                                    Trace.TraceError($"Material `{material}` could not be loaded");
+                                    request.status = IsMaterialRequest.Status.NotFound;
+                                }
+                            }
                         }
                     }
                 }
