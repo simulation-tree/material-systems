@@ -106,12 +106,12 @@ namespace Materials.Systems
 
         private readonly bool TryLoadMaterial(Entity material, IsMaterialRequest request, Simulator simulator)
         {
-            LoadData message = new(material, request.address);
+            World world = material.world;
+            LoadData message = new(world, request.address);
             if (simulator.TryHandleMessage(ref message))
             {
                 if (message.IsLoaded)
                 {
-                    World world = material.world;
 
                     //todo: handle different formats, especially gltf
                     const string VertexProperty = "vertex";
