@@ -55,7 +55,7 @@ namespace Materials.Systems
         {
             while (operations.TryPop(out Operation operation))
             {
-                world.Perform(operation);
+                operation.Perform(world);
                 operation.Dispose();
             }
         }
@@ -142,32 +142,26 @@ namespace Materials.Systems
                         //todo: this material import operation isnt built properly, some operations
                         //are immediate others are deferred and it should all be deferred
                         Operation operation = new();
-                        Operation.SelectedEntity selectedEntity = operation.SelectEntity(material);
+                        operation.SelectEntity(material);
                         rint vertexShaderReference = material.AddReference(vertexShader);
                         rint fragmentShaderReference = material.AddReference(fragmentShader);
 
-                        if (material.TryGetComponent(out IsMaterial component))
-                        {
-                            operation.SetComponent(component.IncrementVersion(), schema);
-                        }
-                        else
-                        {
-                            operation.AddComponent(new IsMaterial(0, vertexShaderReference, fragmentShaderReference), schema);
-                        }
+                        material.TryGetComponent(out IsMaterial component);
+                        operation.AddOrSetComponent(new IsMaterial(component.version + 1, vertexShaderReference, fragmentShaderReference));
 
                         if (!material.ContainsArray<PushBinding>())
                         {
-                            operation.CreateArray<PushBinding>(0, schema);
+                            operation.CreateArray<PushBinding>();
                         }
 
                         if (!material.ContainsArray<ComponentBinding>())
                         {
-                            operation.CreateArray<ComponentBinding>(0, schema);
+                            operation.CreateArray<ComponentBinding>();
                         }
 
                         if (!material.ContainsArray<TextureBinding>())
                         {
-                            operation.CreateArray<TextureBinding>(0, schema);
+                            operation.CreateArray<TextureBinding>();
                         }
 
                         operations.Push(operation);
