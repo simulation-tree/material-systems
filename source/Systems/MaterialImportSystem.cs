@@ -106,13 +106,12 @@ namespace Materials.Systems
 
         private readonly bool TryLoadMaterial(Entity material, IsMaterialRequest request, Simulator simulator)
         {
-            HandleDataRequest message = new(material, request.address);
+            LoadData message = new(material, request.address);
             if (simulator.TryHandleMessage(ref message))
             {
-                if (message.loaded)
+                if (message.IsLoaded)
                 {
                     World world = material.world;
-                    Schema schema = world.Schema;
 
                     //todo: handle different formats, especially gltf
                     const string VertexProperty = "vertex";
@@ -121,6 +120,7 @@ namespace Materials.Systems
                     using JSONObject jsonObject = reader.ReadObject<JSONObject>();
                     bool hasVertexProperty = jsonObject.Contains(VertexProperty);
                     bool hasFragmentProperty = jsonObject.Contains(FragmentProperty);
+                    message.Dispose();
                     if (hasVertexProperty && hasFragmentProperty)
                     {
                         Address vertexAddress = new(jsonObject.GetText(VertexProperty));
