@@ -108,11 +108,10 @@ namespace Materials.Systems
         {
             World world = material.world;
             LoadData message = new(world, request.address);
-            if (simulator.TryHandleMessage(ref message))
+            if (simulator.TryHandleMessage(ref message) != default)
             {
                 if (message.IsLoaded)
                 {
-
                     //todo: handle different formats, especially gltf
                     const string VertexProperty = "vertex";
                     const string FragmentProperty = "fragment";
@@ -146,8 +145,14 @@ namespace Materials.Systems
                         rint vertexShaderReference = material.AddReference(vertexShader);
                         rint fragmentShaderReference = material.AddReference(fragmentShader);
 
-                        material.TryGetComponent(out IsMaterial component);
-                        operation.AddOrSetComponent(new IsMaterial(component.version + 1, vertexShaderReference, fragmentShaderReference));
+                        if (!material.TryGetComponent(out IsMaterial component))
+                        {
+                            MaterialFlags flags = MaterialFlags.DepthTest | MaterialFlags.DepthWrite;
+                            CompareOperation depthCompareOperation = CompareOperation.LessOrEqual;
+                            component = new(default, default, default, flags, depthCompareOperation);
+                        }
+
+                        operation.AddOrSetComponent(new IsMaterial(component.version + 1, vertexShaderReference, fragmentShaderReference, component.flags, component.depthCompareOperation));
 
                         if (!material.ContainsArray<PushBinding>())
                         {
