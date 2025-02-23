@@ -115,7 +115,7 @@ namespace Materials.Systems
                     //todo: handle different formats, especially gltf
                     const string VertexProperty = "vertex";
                     const string FragmentProperty = "fragment";
-                    using BinaryReader reader = new(message.Bytes);
+                    using ByteReader reader = new(message.Bytes);
                     using JSONObject jsonObject = reader.ReadObject<JSONObject>();
                     bool hasVertexProperty = jsonObject.Contains(VertexProperty);
                     bool hasFragmentProperty = jsonObject.Contains(FragmentProperty);
@@ -152,7 +152,7 @@ namespace Materials.Systems
                             component = new(default, default, default, flags, depthCompareOperation);
                         }
 
-                        operation.AddOrSetComponent(new IsMaterial(component.version + 1, vertexShaderReference, fragmentShaderReference, component.flags, component.depthCompareOperation));
+                        operation.AddOrSetComponent(component.IncrementVersion(vertexShaderReference, fragmentShaderReference));
 
                         if (!material.ContainsArray<PushBinding>())
                         {
