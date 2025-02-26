@@ -1,4 +1,4 @@
-﻿using Collections;
+﻿using Collections.Generic;
 using Data;
 using Data.Messages;
 using Materials.Components;
