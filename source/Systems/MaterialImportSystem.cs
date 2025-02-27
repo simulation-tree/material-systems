@@ -62,10 +62,10 @@ namespace Materials.Systems
 
         private readonly void LoadMaterials(World world, Simulator simulator, TimeSpan delta)
         {
-            ComponentType componentType = world.Schema.GetComponent<IsMaterialRequest>();
+            ComponentType componentType = world.Schema.GetComponentType<IsMaterialRequest>();
             foreach (Chunk chunk in world.Chunks)
             {
-                if (chunk.Definition.Contains(componentType))
+                if (chunk.Definition.ContainsComponent(componentType))
                 {
                     USpan<uint> entities = chunk.Entities;
                     USpan<IsMaterialRequest> components = chunk.GetComponents<IsMaterialRequest>(componentType);
