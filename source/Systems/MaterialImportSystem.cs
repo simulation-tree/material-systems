@@ -154,14 +154,14 @@ namespace Materials.Systems
 
                         operation.AddOrSetComponent(component.IncrementVersion(vertexShaderReference, fragmentShaderReference));
 
-                        if (!material.ContainsArray<PushBinding>())
+                        if (!material.ContainsArray<InstanceDataBinding>())
                         {
-                            operation.CreateArray<PushBinding>();
+                            operation.CreateArray<InstanceDataBinding>();
                         }
 
-                        if (!material.ContainsArray<ComponentBinding>())
+                        if (!material.ContainsArray<EntityComponentBinding>())
                         {
-                            operation.CreateArray<ComponentBinding>();
+                            operation.CreateArray<EntityComponentBinding>();
                         }
 
                         if (!material.ContainsArray<TextureBinding>())
