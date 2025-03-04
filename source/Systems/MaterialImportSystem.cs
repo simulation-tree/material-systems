@@ -145,14 +145,15 @@ namespace Materials.Systems
                         rint vertexShaderReference = material.AddReference(vertexShader);
                         rint fragmentShaderReference = material.AddReference(fragmentShader);
 
-                        if (!material.TryGetComponent(out IsMaterial component))
-                        {
-                            MaterialFlags flags = MaterialFlags.DepthTest | MaterialFlags.DepthWrite;
-                            CompareOperation depthCompareOperation = CompareOperation.LessOrEqual;
-                            component = new(default, default, default, flags, depthCompareOperation);
-                        }
+                        material.TryGetComponent(out IsMaterial component);
 
-                        operation.AddOrSetComponent(component.IncrementVersion(vertexShaderReference, fragmentShaderReference));
+                        //todo: the flags and depth compare op are always assigned even if material component is already present
+                        MaterialFlags flags = MaterialFlags.DepthTest | MaterialFlags.DepthWrite;
+                        CompareOperation depthCompareOperation = CompareOperation.LessOrEqual;
+                        component = component.WithFlags(flags);
+                        component = component.WithDepthCompareOperation(depthCompareOperation);
+
+                        operation.AddOrSetComponent(component.WithShaderReferences(vertexShaderReference, fragmentShaderReference));
 
                         if (!material.ContainsArray<InstanceDataBinding>())
                         {
