@@ -7,9 +7,9 @@ namespace Materials.Systems
     public readonly struct ShaderKey : IEquatable<ShaderKey>
     {
         public readonly World world;
-        public readonly FixedString address;
+        public readonly ASCIIText256 address;
 
-        public ShaderKey(World world, FixedString address)
+        public ShaderKey(World world, ASCIIText256 address)
         {
             this.address = address;
             this.world = world;
