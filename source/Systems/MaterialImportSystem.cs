@@ -67,9 +67,9 @@ namespace Materials.Systems
             {
                 if (chunk.Definition.ContainsComponent(componentType))
                 {
-                    USpan<uint> entities = chunk.Entities;
-                    USpan<IsMaterialRequest> components = chunk.GetComponents<IsMaterialRequest>(componentType);
-                    for (uint i = 0; i < entities.Length; i++)
+                    ReadOnlySpan<uint> entities = chunk.Entities;
+                    Span<IsMaterialRequest> components = chunk.GetComponents<IsMaterialRequest>(componentType);
+                    for (int i = 0; i < entities.Length; i++)
                     {
                         ref IsMaterialRequest request = ref components[i];
                         Entity material = new(world, entities[i]);
