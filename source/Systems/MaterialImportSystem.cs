@@ -17,38 +17,35 @@ namespace Materials.Systems
         private readonly Dictionary<ShaderKey, Shader> cachedShaders;
         private readonly Stack<Operation> operations;
 
-        private MaterialImportSystem(Dictionary<ShaderKey, Shader> cachedShaders, Stack<Operation> operations)
+        public MaterialImportSystem()
         {
-            this.cachedShaders = cachedShaders;
-            this.operations = operations;
+            cachedShaders = new(4);
+            operations = new(4);
         }
 
-        void ISystem.Start(in SystemContainer systemContainer, in World world)
+        public readonly void Dispose()
         {
-            if (systemContainer.World == world)
+            while (operations.TryPop(out Operation operation))
             {
-                systemContainer.Write(new MaterialImportSystem(new(), new()));
+                operation.Dispose();
             }
+
+            operations.Dispose();
+            cachedShaders.Dispose();
         }
 
-        void ISystem.Update(in SystemContainer systemContainer, in World world, in TimeSpan delta)
+        void ISystem.Start(in SystemContext context, in World world)
         {
-            LoadMaterials(world, systemContainer.simulator, delta);
+        }
+
+        void ISystem.Update(in SystemContext context, in World world, in TimeSpan delta)
+        {
+            LoadMaterials(world, context, delta);
             PerformInstructions(world);
         }
 
-        void ISystem.Finish(in SystemContainer systemContainer, in World world)
+        void ISystem.Finish(in SystemContext context, in World world)
         {
-            if (systemContainer.World == world)
-            {
-                while (operations.TryPop(out Operation operation))
-                {
-                    operation.Dispose();
-                }
-
-                operations.Dispose();
-                cachedShaders.Dispose();
-            }
         }
 
         private readonly void PerformInstructions(World world)
@@ -60,15 +57,15 @@ namespace Materials.Systems
             }
         }
 
-        private readonly void LoadMaterials(World world, Simulator simulator, TimeSpan delta)
+        private readonly void LoadMaterials(World world, SystemContext context, TimeSpan delta)
         {
-            ComponentType componentType = world.Schema.GetComponentType<IsMaterialRequest>();
+            int componentType = world.Schema.GetComponentType<IsMaterialRequest>();
             foreach (Chunk chunk in world.Chunks)
             {
                 if (chunk.Definition.ContainsComponent(componentType))
                 {
                     ReadOnlySpan<uint> entities = chunk.Entities;
-                    Span<IsMaterialRequest> components = chunk.GetComponents<IsMaterialRequest>(componentType);
+                    ComponentEnumerator<IsMaterialRequest> components = chunk.GetComponents<IsMaterialRequest>(componentType);
                     for (int i = 0; i < entities.Length; i++)
                     {
                         ref IsMaterialRequest request = ref components[i];
@@ -82,7 +79,7 @@ namespace Materials.Systems
                         if (request.status == IsMaterialRequest.Status.Loading)
                         {
                             IsMaterialRequest dataRequest = request;
-                            if (TryLoadMaterial(material, dataRequest, simulator))
+                            if (TryLoadMaterial(material, dataRequest, context))
                             {
                                 Trace.WriteLine($"Material `{material}` has been loaded");
 
@@ -104,11 +101,11 @@ namespace Materials.Systems
             }
         }
 
-        private readonly bool TryLoadMaterial(Entity material, IsMaterialRequest request, Simulator simulator)
+        private readonly bool TryLoadMaterial(Entity material, IsMaterialRequest request, SystemContext context)
         {
             World world = material.world;
             LoadData message = new(world, request.address);
-            if (simulator.TryHandleMessage(ref message) != default)
+            if (context.TryHandleMessage(ref message) != default)
             {
                 if (message.IsLoaded)
                 {
