@@ -12,9 +12,9 @@ namespace Materials.Systems.Tests
     {
         static MaterialSystemTests()
         {
-            TypeRegistry.Load<DataTypeBank>();
-            TypeRegistry.Load<MaterialsTypeBank>();
-            TypeRegistry.Load<ShadersTypeBank>();
+            MetadataRegistry.Load<DataTypeBank>();
+            MetadataRegistry.Load<MaterialsTypeBank>();
+            MetadataRegistry.Load<ShadersTypeBank>();
         }
 
         protected override void SetUp()
