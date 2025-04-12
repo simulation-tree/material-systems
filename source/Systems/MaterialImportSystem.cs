@@ -181,7 +181,7 @@ namespace Materials.Systems
                         const string RenderOrder = "renderOrder";
                         if (jsonObject.TryGetNumber(RenderOrder, out double renderOrder))
                         {
-                            component.renderOrder = (sbyte)renderOrder;
+                            component.order = (sbyte)renderOrder;
                         }
 
                         component.vertexShaderReference = vertexShaderReference;
