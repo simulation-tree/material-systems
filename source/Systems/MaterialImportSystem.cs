@@ -143,20 +143,19 @@ namespace Materials.Systems
             LoadData message = new(world, request.address);
             if (context.TryHandleMessage(ref message) != default)
             {
-                if (message.IsLoaded)
+                if (message.TryConsume(out ByteReader data))
                 {
                     //todo: handle different formats, especially gltf
                     const string Vertex = "vertex";
                     const string Fragment = "fragment";
-                    using ByteReader reader = new(message.Bytes);
-                    using JSONObject jsonObject = reader.ReadObject<JSONObject>();
-                    bool hasVertexProperty = jsonObject.Contains(Vertex);
-                    bool hasFragmentProperty = jsonObject.Contains(Fragment);
-                    message.Dispose();
+                    using JSONObject jsonObject = data.ReadObject<JSONObject>();
+                    bool hasVertexProperty = jsonObject.TryGetText(Vertex, out ReadOnlySpan<char> vertexText);
+                    bool hasFragmentProperty = jsonObject.TryGetText(Fragment, out ReadOnlySpan<char> fragmentText);
+                    data.Dispose();
                     if (hasVertexProperty && hasFragmentProperty)
                     {
-                        Address vertexAddress = new(jsonObject.GetText(Vertex));
-                        Address fragmentAddress = new(jsonObject.GetText(Fragment));
+                        Address vertexAddress = new(vertexText);
+                        Address fragmentAddress = new(fragmentText);
                         ShaderKey vertexKey = new(world, vertexAddress);
                         if (!cachedShaders.TryGetValue(vertexKey, out Shader vertexShader))
                         {
