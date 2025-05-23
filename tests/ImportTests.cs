@@ -20,7 +20,7 @@ namespace Materials.Systems.Tests
 
             Material material = new(world, "Assets/testMaterial.json");
 
-            await material.UntilCompliant(Update, cancellation);
+            await material.UntilCompliant(Simulator.Update, cancellation);
 
             Assert.That(material.IsCompliant, Is.True);
             Shader vertexShader = material.VertexShader;
