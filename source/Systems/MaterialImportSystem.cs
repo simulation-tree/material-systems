@@ -51,54 +51,36 @@ namespace Materials.Systems
         }
 
         private readonly Dictionary<ShaderKey, Shader> cachedShaders;
-        private readonly Stack<Operation> operations;
+        private readonly Operation operation;
+        private readonly int requestType;
 
-        public MaterialImportSystem()
+        public MaterialImportSystem(Simulator simulator)
         {
             cachedShaders = new(4);
-            operations = new(4);
+            operation = new();
+
+            requestType = simulator.world.Schema.GetComponentType<IsMaterialRequest>();
         }
 
         public void Dispose()
         {
-            while (operations.TryPop(out Operation operation))
-            {
-                operation.Dispose();
-            }
-
-            operations.Dispose();
+            operation.Dispose();
             cachedShaders.Dispose();
         }
 
         void ISystem.Update(Simulator simulator, double deltaTime)
         {
-            LoadMaterials(simulator, deltaTime);
-            PerformInstructions(simulator.world);
-        }
-
-        private void PerformInstructions(World world)
-        {
-            while (operations.TryPop(out Operation operation))
-            {
-                operation.Perform(world);
-                operation.Dispose();
-            }
-        }
-
-        private void LoadMaterials(Simulator simulator, double deltaTime)
-        {
             World world = simulator.world;
-            int componentType = world.Schema.GetComponentType<IsMaterialRequest>();
             foreach (Chunk chunk in world.Chunks)
             {
-                if (chunk.Definition.ContainsComponent(componentType))
+                if (chunk.Definition.ContainsComponent(requestType))
                 {
                     ReadOnlySpan<uint> entities = chunk.Entities;
-                    ComponentEnumerator<IsMaterialRequest> components = chunk.GetComponents<IsMaterialRequest>(componentType);
+                    ComponentEnumerator<IsMaterialRequest> components = chunk.GetComponents<IsMaterialRequest>(requestType);
                     for (int i = 0; i < entities.Length; i++)
                     {
                         ref IsMaterialRequest request = ref components[i];
-                        Entity material = new(world, entities[i]);
+                        uint material = entities[i];
                         if (request.status == IsMaterialRequest.Status.Submitted)
                         {
                             request.status = IsMaterialRequest.Status.Loading;
@@ -108,12 +90,10 @@ namespace Materials.Systems
                         if (request.status == IsMaterialRequest.Status.Loading)
                         {
                             IsMaterialRequest dataRequest = request;
-                            if (TryLoadMaterial(material, dataRequest, simulator))
+                            if (TryLoadMaterial(world, material, dataRequest, simulator))
                             {
                                 Trace.WriteLine($"Material `{material}` has been loaded");
-
-                                //todo: being done this way because reference to the request may have shifted
-                                material.SetComponent(dataRequest.BecomeLoaded());
+                                request.status = IsMaterialRequest.Status.Loaded;
                             }
                             else
                             {
@@ -128,11 +108,17 @@ namespace Materials.Systems
                     }
                 }
             }
+
+            if (operation.Count > 0)
+            {
+                operation.Perform(world);
+                operation.Reset();
+            }
         }
 
-        private bool TryLoadMaterial(Entity material, IsMaterialRequest request, Simulator simulator)
+        private bool TryLoadMaterial(World world, uint entity, IsMaterialRequest request, Simulator simulator)
         {
-            World world = material.world;
+            Entity material = new(world, entity);
             LoadData message = new(world, request.address);
             simulator.Broadcast(ref message);
             if (message.TryConsume(out ByteReader data))
@@ -162,8 +148,7 @@ namespace Materials.Systems
                         cachedShaders.Add(fragmentKey, fragmentShader);
                     }
 
-                    Operation operation = new();
-                    operation.SelectEntity(material);
+                    operation.SetSelectedEntity(material);
                     rint vertexShaderReference = material.AddReference(vertexShader);
                     rint fragmentShaderReference = material.AddReference(fragmentShader);
 
@@ -195,8 +180,6 @@ namespace Materials.Systems
                     {
                         operation.CreateArray<TextureBinding>();
                     }
-
-                    operations.Push(operation);
                 }
                 else if (!hasVertexProperty && !hasFragmentProperty)
                 {

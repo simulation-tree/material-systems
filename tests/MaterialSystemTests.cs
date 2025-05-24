@@ -20,9 +20,9 @@ namespace Materials.Systems.Tests
         protected override void SetUp()
         {
             base.SetUp();
-            Simulator.Add(new DataImportSystem());
-            Simulator.Add(new MaterialImportSystem());
-            Simulator.Add(new ShaderImportSystem());
+            Simulator.Add(new DataImportSystem(Simulator));
+            Simulator.Add(new MaterialImportSystem(Simulator));
+            Simulator.Add(new ShaderImportSystem(Simulator));
         }
 
         protected override void TearDown()
