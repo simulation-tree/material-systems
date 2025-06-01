@@ -12,8 +12,9 @@ using Worlds;
 
 namespace Materials.Systems
 {
-    public class MaterialImportSystem : ISystem, IDisposable
+    public partial class MaterialImportSystem : SystemBase, IListener<DataUpdate>
     {
+        //todo: move all this static junk to an internal static class
         private static readonly BlendFactor[] blendFactors = Enum.GetValues<BlendFactor>();
         private static readonly BlendOperation[] blendOperations = Enum.GetValues<BlendOperation>();
         private static readonly CompareOperation[] compareOperations = Enum.GetValues<CompareOperation>();
@@ -50,29 +51,35 @@ namespace Materials.Systems
             }
         }
 
-        private readonly Dictionary<ShaderKey, Shader> cachedShaders;
+        private readonly World world;
+        private readonly Dictionary<ShaderKey, uint> cachedShaders;
         private readonly Operation operation;
         private readonly int requestType;
+        private readonly int materialType;
 
-        public MaterialImportSystem(Simulator simulator)
+        public MaterialImportSystem(Simulator simulator, World world) : base(simulator)
         {
+            this.world = world;
             cachedShaders = new(4);
-            operation = new();
+            operation = new(world);
 
-            requestType = simulator.world.Schema.GetComponentType<IsMaterialRequest>();
+            Schema schema = world.Schema;
+            requestType = schema.GetComponentType<IsMaterialRequest>();
+            materialType = schema.GetComponentType<IsMaterial>();
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             operation.Dispose();
             cachedShaders.Dispose();
         }
 
-        void ISystem.Update(Simulator simulator, double deltaTime)
+        void IListener<DataUpdate>.Receive(ref DataUpdate message)
         {
-            World world = simulator.world;
-            foreach (Chunk chunk in world.Chunks)
+            ReadOnlySpan<Chunk> chunks = world.Chunks;
+            for (int c = 0; c < chunks.Length; c++)
             {
+                Chunk chunk = chunks[c];
                 if (chunk.Definition.ContainsComponent(requestType))
                 {
                     ReadOnlySpan<uint> entities = chunk.Entities;
@@ -89,15 +96,14 @@ namespace Materials.Systems
 
                         if (request.status == IsMaterialRequest.Status.Loading)
                         {
-                            IsMaterialRequest dataRequest = request;
-                            if (TryLoadMaterial(world, material, dataRequest, simulator))
+                            if (TryLoadMaterial(material, request))
                             {
                                 Trace.WriteLine($"Material `{material}` has been loaded");
                                 request.status = IsMaterialRequest.Status.Loaded;
                             }
                             else
                             {
-                                request.duration += deltaTime;
+                                request.duration += message.deltaTime;
                                 if (request.duration >= request.timeout)
                                 {
                                     Trace.TraceError($"Material `{material}` could not be loaded");
@@ -109,17 +115,15 @@ namespace Materials.Systems
                 }
             }
 
-            if (operation.Count > 0)
+            if (operation.TryPerform())
             {
-                operation.Perform(world);
                 operation.Reset();
             }
         }
 
-        private bool TryLoadMaterial(World world, uint entity, IsMaterialRequest request, Simulator simulator)
+        private bool TryLoadMaterial(uint materialEntity, IsMaterialRequest request)
         {
-            Entity material = new(world, entity);
-            LoadData message = new(world, request.address);
+            LoadData message = new(request.address);
             simulator.Broadcast(ref message);
             if (message.TryConsume(out ByteReader data))
             {
@@ -135,24 +139,24 @@ namespace Materials.Systems
                     Address vertexAddress = new(vertexText);
                     Address fragmentAddress = new(fragmentText);
                     ShaderKey vertexKey = new(world, vertexAddress);
-                    if (!cachedShaders.TryGetValue(vertexKey, out Shader vertexShader))
+                    if (!cachedShaders.TryGetValue(vertexKey, out uint vertexShader))
                     {
-                        vertexShader = new(world, vertexAddress, ShaderType.Vertex);
+                        vertexShader = new Shader(world, vertexAddress, ShaderType.Vertex).GetEntityValue();
                         cachedShaders.Add(vertexKey, vertexShader);
                     }
 
                     ShaderKey fragmentKey = new(world, fragmentAddress);
-                    if (!cachedShaders.TryGetValue(fragmentKey, out Shader fragmentShader))
+                    if (!cachedShaders.TryGetValue(fragmentKey, out uint fragmentShader))
                     {
-                        fragmentShader = new(world, fragmentAddress, ShaderType.Fragment);
+                        fragmentShader = new Shader(world, fragmentAddress, ShaderType.Fragment).GetEntityValue();
                         cachedShaders.Add(fragmentKey, fragmentShader);
                     }
 
-                    operation.SetSelectedEntity(material);
-                    rint vertexShaderReference = material.AddReference(vertexShader);
-                    rint fragmentShaderReference = material.AddReference(fragmentShader);
+                    operation.SetSelectedEntity(materialEntity);
+                    rint vertexShaderReference = world.AddReference(materialEntity, vertexShader);
+                    rint fragmentShaderReference = world.AddReference(materialEntity, fragmentShader);
 
-                    material.TryGetComponent(out IsMaterial component);
+                    world.TryGetComponent(materialEntity, materialType, out IsMaterial component);
 
                     const string RenderOrder = "renderOrder";
                     if (jsonObject.TryGetNumber(RenderOrder, out double renderOrder))
@@ -166,32 +170,32 @@ namespace Materials.Systems
                     component.depthSettings = GetDepthSettings(jsonObject);
                     operation.AddOrSetComponent(component);
 
-                    if (!material.ContainsArray<InstanceDataBinding>())
+                    if (!world.ContainsArray<InstanceDataBinding>(materialEntity))
                     {
                         operation.CreateArray<InstanceDataBinding>();
                     }
 
-                    if (!material.ContainsArray<EntityComponentBinding>())
+                    if (!world.ContainsArray<EntityComponentBinding>(materialEntity))
                     {
                         operation.CreateArray<EntityComponentBinding>();
                     }
 
-                    if (!material.ContainsArray<TextureBinding>())
+                    if (!world.ContainsArray<TextureBinding>(materialEntity))
                     {
                         operation.CreateArray<TextureBinding>();
                     }
                 }
                 else if (!hasVertexProperty && !hasFragmentProperty)
                 {
-                    throw new InvalidOperationException($"JSON data for material `{material}` has neither `{Vertex}` or `{Fragment}` properties");
+                    throw new InvalidOperationException($"JSON data for material `{materialEntity}` has neither `{Vertex}` or `{Fragment}` properties");
                 }
                 else if (!hasVertexProperty)
                 {
-                    throw new InvalidOperationException($"JSON data for material `{material}` has no `{Vertex}` property");
+                    throw new InvalidOperationException($"JSON data for material `{materialEntity}` has no `{Vertex}` property");
                 }
                 else
                 {
-                    throw new InvalidOperationException($"JSON data for material `{material}` has no `{Fragment}` property");
+                    throw new InvalidOperationException($"JSON data for material `{materialEntity}` has no `{Fragment}` property");
                 }
 
                 return true;
