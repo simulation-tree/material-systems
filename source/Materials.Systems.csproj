@@ -31,9 +31,9 @@
 
   <ItemGroup>
     <Content Include="bin/Debug/net9.0/Materials.Systems.dll" Pack="true" PackagePath="tools/debug/Materials.Systems.dll" Visible="false"/>
-    <Content Include="bin/Debug/net9.0/Materials.Systems.xml" Pack="true" PackagePath="tools/debug/Materials.Systems.xml" Visible="false"/>
+    <Content Include="bin/Debug/net9.0/Materials.Systems.xml" Pack="true" PackagePath="tools/debug/Materials.Systems.xml" Visible="false" Condition="Exists('bin/Debug/net9.0/Materials.Systems.xml')"/>
     <Content Include="bin/Release/net9.0/Materials.Systems.dll" Pack="true" PackagePath="tools/release/Materials.Systems.dll" Visible="false"/>
-    <Content Include="bin/Release/net9.0/Materials.Systems.xml" Pack="true" PackagePath="tools/release/Materials.Systems.xml" Visible="false"/>
+    <Content Include="bin/Release/net9.0/Materials.Systems.xml" Pack="true" PackagePath="tools/release/Materials.Systems.xml" Visible="false" Condition="Exists('bin/Release/net9.0/Materials.Systems.xml')"/>
     <Content Include="build/Materials.Systems.targets" Pack="true" PackagePath="build/Materials.Systems.targets" Visible="false"/>
   </ItemGroup>
 
