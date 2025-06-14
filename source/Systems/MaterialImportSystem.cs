@@ -170,9 +170,9 @@ namespace Materials.Systems
                     component.depthSettings = GetDepthSettings(jsonObject);
                     operation.AddOrSetComponent(component);
 
-                    if (!world.ContainsArray<InstanceDataBinding>(materialEntity))
+                    if (!world.ContainsArray<PushConstantBinding>(materialEntity))
                     {
-                        operation.CreateArray<InstanceDataBinding>();
+                        operation.CreateArray<PushConstantBinding>();
                     }
 
                     if (!world.ContainsArray<EntityComponentBinding>(materialEntity))
