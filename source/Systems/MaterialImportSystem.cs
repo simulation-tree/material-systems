@@ -65,6 +65,11 @@ namespace Materials.Systems
                             {
                                 Trace.WriteLine($"Material `{material}` has been loaded");
                                 request.status = IsMaterialRequest.Status.Loaded;
+
+                                //reset iteration loop because entities were created, meaning chunks have changed
+                                c = -1;
+                                chunks = world.Chunks;
+                                break;
                             }
                             else
                             {
@@ -149,6 +154,8 @@ namespace Materials.Systems
                     {
                         operation.CreateArray<TextureBinding>();
                     }
+
+                    return true;
                 }
                 else if (!hasVertexProperty && !hasFragmentProperty)
                 {
@@ -162,8 +169,6 @@ namespace Materials.Systems
                 {
                     throw new InvalidOperationException($"JSON data for material `{materialEntity}` has no `{Fragment}` property");
                 }
-
-                return true;
             }
 
             return false;
