@@ -12,45 +12,10 @@ using Worlds;
 
 namespace Materials.Systems
 {
+    using static Constants;
+
     public partial class MaterialImportSystem : SystemBase, IListener<DataUpdate>
     {
-        //todo: move all this static junk to an internal static class
-        private static readonly BlendFactor[] blendFactors = Enum.GetValues<BlendFactor>();
-        private static readonly BlendOperation[] blendOperations = Enum.GetValues<BlendOperation>();
-        private static readonly CompareOperation[] compareOperations = Enum.GetValues<CompareOperation>();
-        private static readonly StencilOperation[] stencilOperations = Enum.GetValues<StencilOperation>();
-        private static readonly string[] blendFactorOptions;
-        private static readonly string[] blendOperationOptions;
-        private static readonly string[] compareOperationOptions;
-        private static readonly string[] stencilOperationOptions;
-
-        static MaterialImportSystem()
-        {
-            blendFactorOptions = new string[blendFactors.Length];
-            for (int i = 0; i < blendFactors.Length; i++)
-            {
-                blendFactorOptions[i] = blendFactors[i].ToString();
-            }
-
-            blendOperationOptions = new string[blendOperations.Length];
-            for (int i = 0; i < blendOperations.Length; i++)
-            {
-                blendOperationOptions[i] = blendOperations[i].ToString();
-            }
-
-            compareOperationOptions = new string[compareOperations.Length];
-            for (int i = 0; i < compareOperations.Length; i++)
-            {
-                compareOperationOptions[i] = compareOperations[i].ToString();
-            }
-
-            stencilOperationOptions = new string[stencilOperations.Length];
-            for (int i = 0; i < stencilOperations.Length; i++)
-            {
-                stencilOperationOptions[i] = stencilOperations[i].ToString();
-            }
-        }
-
         private readonly World world;
         private readonly Dictionary<ShaderKey, uint> cachedShaders;
         private readonly Operation operation;
@@ -361,58 +326,6 @@ namespace Materials.Systems
             }
 
             return settings;
-        }
-
-        private static BlendFactor? GetBlendFactor(ReadOnlySpan<char> text)
-        {
-            for (int i = 0; i < blendFactorOptions.Length; i++)
-            {
-                if (text.Equals(blendFactorOptions[i], StringComparison.OrdinalIgnoreCase))
-                {
-                    return blendFactors[i];
-                }
-            }
-
-            return null;
-        }
-
-        private static BlendOperation? GetBlendOperation(ReadOnlySpan<char> text)
-        {
-            for (int i = 0; i < blendOperationOptions.Length; i++)
-            {
-                if (text.Equals(blendOperationOptions[i], StringComparison.OrdinalIgnoreCase))
-                {
-                    return blendOperations[i];
-                }
-            }
-
-            return null;
-        }
-
-        private static CompareOperation? GetCompareOperation(ReadOnlySpan<char> text)
-        {
-            for (int i = 0; i < compareOperationOptions.Length; i++)
-            {
-                if (text.Equals(compareOperationOptions[i], StringComparison.OrdinalIgnoreCase))
-                {
-                    return compareOperations[i];
-                }
-            }
-
-            return null;
-        }
-
-        private static StencilOperation? GetStencilOperation(ReadOnlySpan<char> text)
-        {
-            for (int i = 0; i < stencilOperationOptions.Length; i++)
-            {
-                if (text.Equals(stencilOperationOptions[i], StringComparison.OrdinalIgnoreCase))
-                {
-                    return stencilOperations[i];
-                }
-            }
-
-            return null;
         }
     }
 }
