@@ -36,12 +36,12 @@ jobs:
           token: ${{ secrets.PAT }}
           path: shaders
       
-      - name: Checkout `serialization`
+      - name: Checkout `json`
         uses: actions/checkout@v4.1.2
         with:
-          repository: simulation-tree/serialization
+          repository: simulation-tree/json
           token: ${{ secrets.PAT }}
-          path: serialization
+          path: json
       
       - name: Checkout `materials`
         uses: actions/checkout@v4.1.2

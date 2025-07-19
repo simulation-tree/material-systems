@@ -1,8 +1,8 @@
 ﻿using Collections.Generic;
 using Data;
 using Data.Messages;
+using JSON;
 using Materials.Components;
-using Serialization.JSON;
 using Shaders;
 using Simulation;
 using System;

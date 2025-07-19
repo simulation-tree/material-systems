@@ -17,12 +17,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\data\core\Data.Core.csproj"/>
-    <ProjectReference Include="..\..\materials\source\Materials.csproj"/>
-    <ProjectReference Include="..\..\serialization\source\Serialization.csproj"/>
-    <ProjectReference Include="..\..\shaders\source\Shaders.csproj"/>
-    <ProjectReference Include="..\..\simulation\core\Simulation.Core.csproj"/>
-    <ProjectReference Include="..\..\worlds\core\Worlds.Core.csproj"/>
+    <ProjectReference Include="..\..\data\core\Data.Core.csproj" />
+    <ProjectReference Include="..\..\json\source\JSON.csproj" />
+    <ProjectReference Include="..\..\materials\source\Materials.csproj" />
+    <ProjectReference Include="..\..\shaders\source\Shaders.csproj" />
+    <ProjectReference Include="..\..\simulation\core\Simulation.Core.csproj" />
+    <ProjectReference Include="..\..\worlds\core\Worlds.Core.csproj" />
     <ProjectReference Include="..\..\simulation\generator\Simulation.Generator.csproj">
       <OutputItemType>Analyzer</OutputItemType>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
@@ -30,8 +30,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="bin/**/*" Pack="true" PackagePath="lib" Visible="false"/>
-    <Content Include="buildTransitive/**/*" Pack="true" PackagePath="buildTransitive"/>
+    <Content Include="bin/**/*" Pack="true" PackagePath="lib" Visible="false" />
+    <Content Include="buildTransitive/**/*" Pack="true" PackagePath="buildTransitive" />
   </ItemGroup>
 
 </Project>
