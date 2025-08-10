@@ -15,19 +15,19 @@ jobs:
         with:
           path: ${{ github.event.repository.name }}
             
-      - name: Checkout `simulation`
-        uses: actions/checkout@v4.1.2
-        with:
-          repository: simulation-tree/simulation
-          token: ${{ secrets.PAT }}
-          path: simulation
-      
       - name: Checkout `worlds`
         uses: actions/checkout@v4.1.2
         with:
           repository: simulation-tree/worlds
           token: ${{ secrets.PAT }}
           path: worlds
+      
+      - name: Checkout `simulation`
+        uses: actions/checkout@v4.1.2
+        with:
+          repository: simulation-tree/simulation
+          token: ${{ secrets.PAT }}
+          path: simulation
       
       - name: Checkout `shaders`
         uses: actions/checkout@v4.1.2
@@ -36,19 +36,19 @@ jobs:
           token: ${{ secrets.PAT }}
           path: shaders
       
-      - name: Checkout `json`
-        uses: actions/checkout@v4.1.2
-        with:
-          repository: simulation-tree/json
-          token: ${{ secrets.PAT }}
-          path: json
-      
       - name: Checkout `materials`
         uses: actions/checkout@v4.1.2
         with:
           repository: simulation-tree/materials
           token: ${{ secrets.PAT }}
           path: materials
+      
+      - name: Checkout `json`
+        uses: actions/checkout@v4.1.2
+        with:
+          repository: simulation-tree/json
+          token: ${{ secrets.PAT }}
+          path: json
       
       - name: Checkout `data`
         uses: actions/checkout@v4.1.2
@@ -95,7 +95,9 @@ jobs:
       - name: Setup
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version:  |
+            9.0.x
+            10.0.x
 
       - name: Set VERSION variable from tag
         run: echo "VERSION=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_ENV
@@ -113,7 +115,7 @@ jobs:
         run: dotnet build "${{ github.event.repository.name }}/tests" -c Release /p:Version=${VERSION}
             
       - name: Test
-        run: dotnet test "${{ github.event.repository.name }}/tests" -c Release --logger "trx"
+        run: dotnet test "${{ github.event.repository.name }}/tests" -c Release --logger "trx" --framework net10.0
             
       - name: Pack `Materials.Systems`
         run: dotnet pack "${{ github.event.repository.name }}/source" /p:Version=${VERSION} --no-build --output .
