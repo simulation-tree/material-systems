@@ -15,33 +15,12 @@ jobs:
         with:
           path: ${{ github.event.repository.name }}
             
-      - name: Checkout `worlds`
+      - name: Checkout `data`
         uses: actions/checkout@v4.1.2
         with:
-          repository: simulation-tree/worlds
+          repository: simulation-tree/data
           token: ${{ secrets.PAT }}
-          path: worlds
-      
-      - name: Checkout `simulation`
-        uses: actions/checkout@v4.1.2
-        with:
-          repository: simulation-tree/simulation
-          token: ${{ secrets.PAT }}
-          path: simulation
-      
-      - name: Checkout `shaders`
-        uses: actions/checkout@v4.1.2
-        with:
-          repository: simulation-tree/shaders
-          token: ${{ secrets.PAT }}
-          path: shaders
-      
-      - name: Checkout `materials`
-        uses: actions/checkout@v4.1.2
-        with:
-          repository: simulation-tree/materials
-          token: ${{ secrets.PAT }}
-          path: materials
+          path: data
       
       - name: Checkout `json`
         uses: actions/checkout@v4.1.2
@@ -50,33 +29,33 @@ jobs:
           token: ${{ secrets.PAT }}
           path: json
       
-      - name: Checkout `data`
+      - name: Checkout `materials`
         uses: actions/checkout@v4.1.2
         with:
-          repository: simulation-tree/data
+          repository: simulation-tree/materials
           token: ${{ secrets.PAT }}
-          path: data
+          path: materials
       
-      - name: Checkout `shader-systems`
+      - name: Checkout `shaders`
         uses: actions/checkout@v4.1.2
         with:
-          repository: simulation-tree/shader-systems
+          repository: simulation-tree/shaders
           token: ${{ secrets.PAT }}
-          path: shader-systems
+          path: shaders
       
-      - name: Checkout `data-systems`
+      - name: Checkout `simulation`
         uses: actions/checkout@v4.1.2
         with:
-          repository: simulation-tree/data-systems
+          repository: simulation-tree/simulation
           token: ${{ secrets.PAT }}
-          path: data-systems
+          path: simulation
       
-      - name: Checkout `collections`
+      - name: Checkout `worlds`
         uses: actions/checkout@v4.1.2
         with:
-          repository: simulation-tree/collections
+          repository: simulation-tree/worlds
           token: ${{ secrets.PAT }}
-          path: collections
+          path: worlds
       
       - name: Checkout `unmanaged`
         uses: actions/checkout@v4.1.2
@@ -91,13 +70,32 @@ jobs:
           repository: simulation-tree/types
           token: ${{ secrets.PAT }}
           path: types
+      
+      - name: Checkout `data-systems`
+        uses: actions/checkout@v4.1.2
+        with:
+          repository: simulation-tree/data-systems
+          token: ${{ secrets.PAT }}
+          path: data-systems
+      
+      - name: Checkout `shader-systems`
+        uses: actions/checkout@v4.1.2
+        with:
+          repository: simulation-tree/shader-systems
+          token: ${{ secrets.PAT }}
+          path: shader-systems
+      
+      - name: Checkout `collections`
+        uses: actions/checkout@v4.1.2
+        with:
+          repository: simulation-tree/collections
+          token: ${{ secrets.PAT }}
+          path: collections
             
       - name: Setup
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: |
-            9.0.x
-            10.0.x
+          dotnet-version: 9.0.x
 
       - name: Set VERSION variable from tag
         run: echo "VERSION=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_ENV
@@ -115,7 +113,7 @@ jobs:
         run: dotnet build "${{ github.event.repository.name }}/tests" -c Release /p:Version=${VERSION}
             
       - name: Test
-        run: dotnet test "${{ github.event.repository.name }}/tests" -c Release --logger "trx" --framework net10.0
+        run: dotnet test "${{ github.event.repository.name }}/tests" -c Release --logger "trx"
             
       - name: Pack `Materials.Systems`
         run: dotnet pack "${{ github.event.repository.name }}/source" /p:Version=${VERSION} --no-build --output .
