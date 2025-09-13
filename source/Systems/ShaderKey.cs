@@ -7,11 +7,11 @@ namespace Materials.Systems
     public readonly struct ShaderKey : IEquatable<ShaderKey>
     {
         public readonly World world;
-        public readonly ASCIIText256 address;
+        public readonly long addressHash;
 
         public ShaderKey(World world, ASCIIText256 address)
         {
-            this.address = address;
+            this.addressHash = address.GetLongHashCode();
             this.world = world;
         }
 
@@ -22,12 +22,15 @@ namespace Materials.Systems
 
         public readonly bool Equals(ShaderKey other)
         {
-            return address.Equals(other.address) && world.Equals(other.world);
+            return addressHash.Equals(other.addressHash) && world.Equals(other.world);
         }
 
         public readonly override int GetHashCode()
         {
-            return HashCode.Combine(address, world);
+            int hash = 17;
+            hash = hash * 31 + (int)addressHash;
+            hash = hash * 31 + world.GetHashCode();
+            return hash;
         }
 
         public static bool operator ==(ShaderKey left, ShaderKey right)
