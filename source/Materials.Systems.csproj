@@ -14,6 +14,7 @@
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <OutDir>bin/$(TargetFramework)/$(Configuration)</OutDir>
+    <PackageId>SimulationTree.Materials.Systems</PackageId>
   </PropertyGroup>
 
   <ItemGroup>
