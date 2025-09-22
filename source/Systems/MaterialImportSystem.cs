@@ -2,6 +2,7 @@
 using Data;
 using Data.Messages;
 using JSON;
+using Materials.Arrays;
 using Materials.Components;
 using Shaders;
 using Simulation;
@@ -45,7 +46,7 @@ namespace Materials.Systems
             for (int c = 0; c < chunks.Length; c++)
             {
                 Chunk chunk = chunks[c];
-                if (chunk.componentTypes.Contains(requestType))
+                if (chunk.ComponentTypes.Contains(requestType))
                 {
                     ReadOnlySpan<uint> entities = chunk.Entities;
                     ComponentEnumerator<IsMaterialRequest> components = chunk.GetComponents<IsMaterialRequest>(requestType);
@@ -66,7 +67,7 @@ namespace Materials.Systems
                                 Trace.WriteLine($"Material `{material}` has been loaded");
                                 request.status = IsMaterialRequest.Status.Loaded;
 
-                                //reset iteration loop because entities were created, meaning chunks have changed
+                                // reset iteration loop because entities were created, meaning chunks have changed
                                 c = -1;
                                 chunks = world.Chunks;
                                 break;
@@ -97,7 +98,7 @@ namespace Materials.Systems
             simulator.Broadcast(ref message);
             if (message.TryConsume(out ByteReader data))
             {
-                //todo: handle different formats, especially gltf
+                // todo: handle different formats, especially gltf
                 const string Vertex = "vertex";
                 const string Fragment = "fragment";
                 using JSONObject jsonObject = data.ReadObject<JSONObject>();
@@ -138,6 +139,7 @@ namespace Materials.Systems
                     component.fragmentShaderReference = fragmentShaderReference;
                     component.blendSettings = GetBlendSettings(jsonObject);
                     component.depthSettings = GetDepthSettings(jsonObject);
+                    component.flags = GetFlags(jsonObject);
                     operation.AddOrSetComponent(component);
 
                     if (!world.ContainsArray<PushConstantBinding>(materialEntity))
@@ -172,6 +174,19 @@ namespace Materials.Systems
             }
 
             return false;
+        }
+
+        private static MaterialFlags GetFlags(JSONObject jsonObject)
+        {
+            const string Instanced = "instanced";
+
+            MaterialFlags flags = MaterialFlags.None;
+            if (jsonObject.TryGetBoolean(Instanced, out bool instanced) && instanced)
+            {
+                flags |= MaterialFlags.Instanced;
+            }
+
+            return flags;
         }
 
         private static DepthSettings GetDepthSettings(JSONObject jsonObject)
